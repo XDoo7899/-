@@ -1,0 +1,106 @@
+-- LocalScript (ใส่ไว้ใน StarterPlayerScripts หรือใช้ผ่าน Executor)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- สร้าง ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local ESPButton = Instance.new("TextButton")
+local HitboxButton = Instance.new("TextButton")
+
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+Frame.Parent = ScreenGui
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
+Frame.Size = UDim2.new(0, 160, 0, 110)
+Frame.Active = true
+Frame.Draggable = true
+
+ESPButton.Parent = Frame
+ESPButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ESPButton.Position = UDim2.new(0.1, 0, 0.15, 0)
+ESPButton.Size = UDim2.new(0, 128, 0, 35)
+ESPButton.Font = Enum.Font.SourceSansBold
+ESPButton.Text = "ESP: OFF"
+ESPButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPButton.TextSize = 18
+
+HitboxButton.Parent = Frame
+HitboxButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+HitboxButton.Position = UDim2.new(0.1, 0, 0.55, 0)
+HitboxButton.Size = UDim2.new(0, 128, 0, 35)
+HitboxButton.Font = Enum.Font.SourceSansBold
+HitboxButton.Text = "Hitbox: OFF"
+HitboxButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HitboxButton.TextSize = 18
+
+-- สถานะการเปิด/ปิด
+local espEnabled = false
+local hitboxEnabled = false
+
+-- ฟังก์ชัน ESP (มองทะลุ)
+local function updateESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local highlight = player.Character:FindFirstChild("ESPHighlight")
+            if espEnabled then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "ESPHighlight"
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.FillTransparency = 0.5
+                    highlight.Parent = player.Character
+                end
+            else
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+        end
+    end
+end
+
+-- ฟังก์ชัน Hitbox (ขยายหัว/ลำตัว)
+RunService.RenderStepped:Connect(function()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            if hitboxEnabled then
+                hrp.Size = Vector3.new(10, 10, 10) -- ปรับขนาด Hitbox ได้ที่นี่
+                hrp.Transparency = 0.7 -- ความโปร่งแสง
+                hrp.BrickColor = BrickColor.new("Really red")
+                hrp.Material = Enum.Material.Neon
+                hrp.CanCollide = false
+            else
+                hrp.Size = Vector3.new(2, 2, 1) -- ขนาดปกติ
+                hrp.Transparency = 1
+            end
+        end
+    end
+end)
+
+-- ปุ่มกด Toggle
+ESPButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    ESPButton.Text = espEnabled and "ESP: ON" or "ESP: OFF"
+    ESPButton.BackgroundColor3 = espEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+    updateESP()
+end)
+
+HitboxButton.MouseButton1Click:Connect(function()
+    hitboxEnabled = not hitboxEnabled
+    HitboxButton.Text = hitboxEnabled and "Hitbox: ON" or "Hitbox: OFF"
+    HitboxButton.BackgroundColor3 = hitboxEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+end)
+
+-- ทำงานเมื่อมีผู้เล่นใหม่เข้ามา
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        updateESP()
+    end)
+end)
